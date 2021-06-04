@@ -1,0 +1,6 @@
+1 No overlap in with overlap of other instance
+2 Overlap this instance is priority to the others
+3 Overlap this instance is lower priority  and is probably beyond
+4 Overlap this instance is very low priority
+5 Material is beyond other vessel
+7 Ignore

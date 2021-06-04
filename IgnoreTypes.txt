@@ -1,0 +1,4 @@
+# 1 Ignore only in segmentation map (all instance are complete)
+# 2 Ignore in segmentation map and in vessel instance map but material instance are complete
+# 3 Ignore in segmentation map and in all instance map
+# 4 Ignore in semantic unless label exists (all Instance are valid)

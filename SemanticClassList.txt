@@ -1,0 +1,15 @@
+1	Vessel
+2	V_Label
+3	V_Cork
+4	V_Parts
+5	Ignore
+6	Liquid
+7	Liquid Suspension
+8	Foam
+9	Gel
+10	Solid
+11	Granular
+12	Powder
+13	Solid Bulk
+14	Vapor
+15	Other Material
