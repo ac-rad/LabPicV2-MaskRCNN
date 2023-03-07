@@ -30,7 +30,7 @@ class MedDataset(datasets.VisionDataset):
 
 
 class LabPicV2Dataset(datasets.VisionDataset):
-    def __init__(self, root, source,  transform=None, target_transform=None, transforms=None, classes=None, subclasses=None, train=True):
+    def __init__(self, root, source,  transform=None, target_transform=None, transforms=None, classes=None, subclasses=None, train=True, load_subclasses=False):
         super(LabPicV2Dataset, self).__init__(root, transforms, transform, target_transform)
         self.root = root
         self.transforms = transforms
@@ -39,6 +39,7 @@ class LabPicV2Dataset(datasets.VisionDataset):
         self.classes = classes
         self.subclass = subclasses
         self.train = train
+        self.load_subclasses = load_subclasses
         self.datapath = self.root + ("/Train" if train else "/Eval")
         print("Creating annotation list for reader this might take a while")
         for AnnDir in os.listdir(self.datapath):
@@ -63,11 +64,12 @@ class LabPicV2Dataset(datasets.VisionDataset):
             except:
                 print(data_i)
                 print(type)
-            sub_label = np.zeros(len(self.subclass) + 1)
-            for sub_cls in data_i[type]:
-                if sub_cls in self.subclass:
-                    sub_label[self.subclass[sub_cls]] = 1
-            sub_class.append(sub_label)
+            if self.load_subclasses:
+                sub_label = np.zeros(len(self.subclass) + 1)
+                for sub_cls in data_i[type]:
+                    if sub_cls in self.subclass:
+                        sub_label[self.subclass[sub_cls]] = 1
+                sub_class.append(sub_label)
             mask = Image.open(data_path + data_i["MaskFilePath"])
             mask = np.array(mask)
             if len(mask.shape) == 3:
@@ -111,7 +113,8 @@ class LabPicV2Dataset(datasets.VisionDataset):
             print(data_path)
         boxes = boxes[keep]
         labels = labels[keep]
-        sub_class = sub_class[keep]
+        if self.load_subclasses:
+            sub_class = sub_class[keep]
         masks = masks[keep]
         if num_objs == 0:
             area = torch.zeros((num_objs,), dtype=torch.int64)

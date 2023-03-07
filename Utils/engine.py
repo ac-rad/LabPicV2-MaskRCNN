@@ -25,8 +25,10 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, ba
         lr_scheduler = utils.warmup_lr_scheduler(optimizer, warmup_iters, warmup_factor)
 
     for images, targets in metric_logger.log_every(data_loader, print_freq, header, batch_limit=batch_limit):
+        # Certain models (e.g. Swin) takes a input tensor of shape (N, 3, H, W), not a list
         images = list(image.to(device) for image in images)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+        print("Shape of each item in images: ", images[0].shape, images[1].shape)
         loss_dict = model(images, targets)
         if is_coco and 'loss_sub_classifer' in loss_dict.keys():
             loss_dict['loss_sub_classifer'] *= 0

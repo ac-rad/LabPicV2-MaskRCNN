@@ -77,15 +77,15 @@ def main(args):
                   "RoundFlask": 7, "Cylinder": 8, "SeparatoryFunnel": 9, "Funnel": 10, "Burete": 11,
                   "ChromatographyColumn": 12, "Condenser": 13, "Bottle": 14, "Jar": 15, "Connector": 16, "Flask": 17,
                   "Cup": 18, "Bowl": 19, "Erlenmeyer": 20, "Vial": 21, "Dish": 22, "HeatingVessel": 23, }
-    dataset = LabPicV2Dataset(os.path.join(args.data_path, "Chemistry"), args.dataset, transforms=utils.get_transform(train=not args.test_only), classes=classes, subclasses=subclasses)
+    dataset = LabPicV2Dataset(os.path.join(args.data_path, "Chemistry"), args.dataset, transforms=utils.get_transform(train=not args.test_only), classes=classes, subclasses=subclasses, load_subclasses=args.subclass)
     med_dataset = LabPicV2Dataset(os.path.join(args.data_path, "Medical"), args.dataset,
                               transforms=utils.get_transform(train=False), classes=classes,
-                              subclasses=subclasses)
+                              subclasses=subclasses, load_subclasses=args.subclass)
     dataset_test = LabPicV2Dataset(os.path.join(args.data_path, "Medical"), args.dataset,
                                   transforms=utils.get_transform(train=not args.test_only), classes=classes,
-                                  subclasses=subclasses, train=False)
-    coco_dataset = ChemScapeDataset(os.path.join(args.data_path, "COCO/SemanticMaps"), ['Vessel'],
-                                    transforms=utils.get_transform(train=not args.test_only), classes=coco_class, subclasses=subclasses, coco=True)
+                                  subclasses=subclasses, train=False, load_subclasses=args.subclass)
+    # coco_dataset = ChemScapeDataset(os.path.join(args.data_path, "COCO/SemanticMaps"), ['Vessel'],
+    #                                 transforms=utils.get_transform(train=not args.test_only), classes=coco_class, subclasses=subclasses, coco=True)
     #coco_dataset = dataset_test
     # dataset = MedDataset(args.data_path, transforms=utils.get_transform(train=False))
     # dataset_test = dataset
@@ -95,33 +95,33 @@ def main(args):
     print("Creating data loaders")
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
-        coco_sampler = torch.utils.data.distributed.DistributedSampler(coco_dataset)
+        # coco_sampler = torch.utils.data.distributed.DistributedSampler(coco_dataset)
         test_sampler = torch.utils.data.distributed.DistributedSampler(dataset_test)
         med_sampler = torch.utils.data.distributed.DistributedSampler(med_dataset)
     else:
         train_sampler = torch.utils.data.RandomSampler(dataset)
-        coco_sampler = torch.utils.data.RandomSampler(coco_dataset)
+        # coco_sampler = torch.utils.data.RandomSampler(coco_dataset)
         test_sampler = torch.utils.data.SequentialSampler(dataset_test)
         med_sampler = torch.utils.data.RandomSampler(med_dataset)
 
     if args.aspect_ratio_group_factor >= 0:
         group_ids = create_aspect_ratio_groups(dataset, k=args.aspect_ratio_group_factor)
         train_batch_sampler = GroupedBatchSampler(train_sampler, group_ids, args.batch_size)
-        coco_batch_sampler = GroupedBatchSampler(coco_sampler, group_ids, args.batch_size)
+        # coco_batch_sampler = GroupedBatchSampler(coco_sampler, group_ids, args.batch_size)
         med_batch_sampler = GroupedBatchSampler(med_sampler, group_ids, args.batch_size)
     else:
         train_batch_sampler = torch.utils.data.BatchSampler(
             train_sampler, args.batch_size, drop_last=True)
-        coco_batch_sampler = torch.utils.data.BatchSampler(
-            coco_sampler, args.batch_size, drop_last=True)
+        # coco_batch_sampler = torch.utils.data.BatchSampler(
+        #     coco_sampler, args.batch_size, drop_last=True)
         med_batch_sampler = torch.utils.data.BatchSampler(
             med_sampler, args.batch_size, drop_last=True)
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_sampler=train_batch_sampler, num_workers=args.workers,
         collate_fn=utils.collate_fn)
-    coco_data_loader = torch.utils.data.DataLoader(
-        coco_dataset, batch_sampler=coco_batch_sampler, num_workers=args.workers,
-        collate_fn=utils.collate_fn)
+    # coco_data_loader = torch.utils.data.DataLoader(
+    #     coco_dataset, batch_sampler=coco_batch_sampler, num_workers=args.workers,
+    #     collate_fn=utils.collate_fn)
     med_data_loader = torch.utils.data.DataLoader(
         med_dataset, batch_sampler=med_batch_sampler, num_workers=args.workers,
         collate_fn=utils.collate_fn)
@@ -130,12 +130,18 @@ def main(args):
         sampler=test_sampler, num_workers=args.workers,
         collate_fn=utils.collate_fn)
     print("Creating model")
-    if args.subclass:
-        print("predicting subclasses")
-        model = detection.__dict__[args.model](num_classes=num_classes, pretrained=args.pretrained, num_sub_cls=25)
-    else:
-        model = torchvision.models.detection.__dict__[args.model](num_classes=num_classes, pretrained=args.pretrained)
+    print("Available models: {}".format(detection.__dict__.keys()))
 
+    print("Using model: {}".format(args.model))
+    print("Using subclass: {}".format(args.subclass))
+    if args.model == "maskrcnn_resnet50_fpn":
+        if args.subclass:
+            print("predicting subclasses")
+            model = detection.__dict__[args.model](num_classes=num_classes, pretrained=args.pretrained, num_sub_cls=25)
+        else:
+            model = torchvision.models.detection.__dict__[args.model](num_classes=num_classes, pretrained=args.pretrained)
+    else:
+        model = detection.__dict__[args.model](num_classes=num_classes, pretrained=args.pretrained)
     model.to(device)
 
     model_without_ddp = model
@@ -196,13 +202,13 @@ def main(args):
         if args.distributed:
             train_sampler.set_epoch(epoch)
         if args.equal_batch:
-            if epoch % 3 == 0:
+            if epoch % 2 == 0:
                 train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
-            elif epoch % 3 == 1:
+            elif epoch % 2 == 1:
                 for i in range(len(dataset)// len(med_dataset)+1):
                     train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
-            else:
-                train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, batch_limit=(len(dataset) // args.batch_size), is_coco=True)
+            # else:
+                # train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, batch_limit=(len(dataset) // args.batch_size), is_coco=True)
             if args.resume:
                 utils.save_on_master({
                     'model': model_without_ddp.state_dict(),
@@ -214,7 +220,7 @@ def main(args):
         else:
             train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
             train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
-            train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, is_coco=True)
+            # train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, is_coco=True)
 
         lr_scheduler.step()
 
@@ -239,7 +245,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__)
 
-    parser.add_argument('--data-path', default='../LabPicData/LabPics2.1', help='dataset')
+    parser.add_argument('--data-path', default='../LabPicV2_Dataset', help='dataset')
     parser.add_argument('--dataset',nargs='*', default=['Vessel'], help='dataset')
     parser.add_argument('--model', default='maskrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')

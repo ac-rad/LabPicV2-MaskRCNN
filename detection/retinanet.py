@@ -7,7 +7,7 @@ from torch import nn, Tensor
 from typing import Dict, List, Tuple, Optional
 
 from ._utils import overwrite_eps
-from torchvision.models.utils import load_state_dict_from_url
+from torch.utils.model_zoo import load_url as load_state_dict_from_url
 
 from . import _utils as det_utils
 from .anchor_utils import AnchorGenerator
