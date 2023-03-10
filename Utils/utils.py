@@ -35,6 +35,19 @@ def get_transform(train):
 
     return T.Compose(transforms)
 
+def get_transform_uniform_dim(train, dim=(512, 512)):
+    transforms = []
+    if train:
+        transforms.append((T.ColorJitter(0.5, 0.5, 0.3)))
+    transforms.append(T.ToTensor())
+    if train:
+        transforms.append(T.RandomHorizontalFlip(0.5))
+        transforms.append(T.RandomVerticalFlip(0.5))
+        # Resize to the same size
+        transforms.append(T.Resize(dim))
+
+    return T.Compose(transforms)
+
 
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a

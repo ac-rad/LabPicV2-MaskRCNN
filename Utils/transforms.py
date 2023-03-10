@@ -61,6 +61,20 @@ class RandomVerticalFlip(object):
                 target["masks"] = target["masks"].flip(-2)
         return image, target
 
+class Resize(object):
+    def __init__(self, dim):
+        self.size = dim
+
+    def __call__(self, image, target):
+        image = F.resize(image, self.size)
+        if "masks" in target:
+            target["masks"] = F.resize(target["masks"], self.size)
+        if "keypoints" in target:
+            keypoints = target["keypoints"]
+            keypoints[:, :, 0] = keypoints[:, :, 0] * self.size[0] / image.shape[-1]
+            keypoints[:, :, 1] = keypoints[:, :, 1] * self.size[1] / image.shape[-2]
+            target["keypoints"] = keypoints
+        return image, target
 
 class ColorJitter(object):
     """Randomly change the brightness, contrast and saturation of an image.

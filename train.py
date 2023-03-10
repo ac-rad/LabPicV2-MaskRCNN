@@ -77,12 +77,21 @@ def main(args):
                   "RoundFlask": 7, "Cylinder": 8, "SeparatoryFunnel": 9, "Funnel": 10, "Burete": 11,
                   "ChromatographyColumn": 12, "Condenser": 13, "Bottle": 14, "Jar": 15, "Connector": 16, "Flask": 17,
                   "Cup": 18, "Bowl": 19, "Erlenmeyer": 20, "Vial": 21, "Dish": 22, "HeatingVessel": 23, }
-    dataset = LabPicV2Dataset(os.path.join(args.data_path, "Chemistry"), args.dataset, transforms=utils.get_transform(train=not args.test_only), classes=classes, subclasses=subclasses, load_subclasses=args.subclass)
+    
+    is_maskrcnn = args.model == "maskrcnn_resnet50_fpn"
+    print("is_maskrcnn: ", is_maskrcnn)
+
+    transforms = utils.get_transform(train=not args.test_only)
+    transforms_non_train = utils.get_transform(train=False)
+
+    dataset = LabPicV2Dataset(os.path.join(args.data_path, "Chemistry"), args.dataset, transforms=transforms, classes=classes, subclasses=subclasses, load_subclasses=args.subclass)
+    
     med_dataset = LabPicV2Dataset(os.path.join(args.data_path, "Medical"), args.dataset,
-                              transforms=utils.get_transform(train=False), classes=classes,
+                              transforms=transforms_non_train, classes=classes,
                               subclasses=subclasses, load_subclasses=args.subclass)
+
     dataset_test = LabPicV2Dataset(os.path.join(args.data_path, "Medical"), args.dataset,
-                                  transforms=utils.get_transform(train=not args.test_only), classes=classes,
+                                  transforms=transforms_non_train, classes=classes,
                                   subclasses=subclasses, train=False, load_subclasses=args.subclass)
     # coco_dataset = ChemScapeDataset(os.path.join(args.data_path, "COCO/SemanticMaps"), ['Vessel'],
     #                                 transforms=utils.get_transform(train=not args.test_only), classes=coco_class, subclasses=subclasses, coco=True)
@@ -203,10 +212,10 @@ def main(args):
             train_sampler.set_epoch(epoch)
         if args.equal_batch:
             if epoch % 2 == 0:
-                train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
+                train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq, is_maskrcnn=is_maskrcnn)
             elif epoch % 2 == 1:
                 for i in range(len(dataset)// len(med_dataset)+1):
-                    train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
+                    train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq, is_maskrcnn=is_maskrcnn)
             # else:
                 # train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, batch_limit=(len(dataset) // args.batch_size), is_coco=True)
             if args.resume:
@@ -218,8 +227,8 @@ def main(args):
                     os.path.join(os.path.dirname(args.resume), "temp.pth"))
                 os.replace(os.path.join(os.path.dirname(args.resume), "temp.pth"), args.resume)
         else:
-            train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
-            train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
+            train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq, is_maskrcnn=is_maskrcnn)
+            train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq, is_maskrcnn=is_maskrcnn)
             # train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, is_coco=True)
 
         lr_scheduler.step()

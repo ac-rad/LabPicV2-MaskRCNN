@@ -11,7 +11,7 @@ import Utils.utils as utils
 import detection
 
 
-def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, batch_limit=None, is_coco=False):
+def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, batch_limit=None, is_coco=False, is_maskrcnn=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -26,9 +26,16 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, ba
 
     for images, targets in metric_logger.log_every(data_loader, print_freq, header, batch_limit=batch_limit):
         # Certain models (e.g. Swin) takes a input tensor of shape (N, 3, H, W), not a list
+        # if is_maskrcnn:
         images = list(image.to(device) for image in images)
+        print("There are {} images in the batch".format(len(images)))
+        for i in range(len(images)):
+            print("Shape of image {}: {}".format(i, images[i].shape))
+        # else:
+        #     images = torch.stack(images).to(device)
+        #     # images = images.permute(0, 2, 3, 1)
+        #     print("Shape of images: ", images.shape)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-        print("Shape of each item in images: ", images[0].shape, images[1].shape)
         loss_dict = model(images, targets)
         if is_coco and 'loss_sub_classifer' in loss_dict.keys():
             loss_dict['loss_sub_classifer'] *= 0
