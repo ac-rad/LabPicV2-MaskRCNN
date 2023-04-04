@@ -85,11 +85,13 @@ class ChemDemo(object):
 
     def run_on_image(self, image, target=None, outDir=None):
         top_predictions = self.predict_on_image(image)
-        results = image[0].t.numpy().copy()
+        # results = image[0].t.numpy().copy()
+        results = image[0].cpu().numpy().copy()
         results = np.dstack((results[0], results[1], results[2]))
         results = self.overlay_boxes(results, top_predictions)
         results = self.overlay_mask(results, top_predictions)
-        plt.imshow(cv.cvtColor(results, cv.COLOR_BGR2RGB))
+        # plt.imshow(cv.cvtColor(results, cv.COLOR_BGR2RGB))
+        plt.imshow(results)
         if target:
             plt.savefig(outDir + "/" + target + '.png')
             plt.clf()
@@ -116,6 +118,8 @@ class ChemDemo(object):
             top_left, bottom_right = box[:2].tolist(), box[2:].tolist()
             image = cv.rectangle(image, tuple(top_left), tuple(bottom_right), tuple(color), 1)
             s = template.format(label, score)
+            x = int(x.item())
+            y = int(y.item())
             image = cv.putText(
                 image, s, (x, y), cv.FONT_HERSHEY_SIMPLEX, 1, color, 1
             )
