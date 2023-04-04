@@ -75,29 +75,31 @@ def predict_on_all_imgs():
     device = torch.device('cuda')
     model = Maskrcnn(model_path, device, subclass=True)
     with torch.no_grad():
-        for subdir, dirs, files in os.walk(img_path):
-            imgList = []
-            i = 0
-            for j in tqdm(range(len(dirs))):
-                dirname = dirs[j]
-                if i != 4:
-                    imgList.append(osp.join(img_path, dirname))
-                    i += 1
-                else:
-                    imgs = [Image.open(f"{i}/Image.jpg").convert("RGB") for i in imgList]
-                    image = [model.transform(img, None)[0].to(model.device) for img in imgs]
-                    preds = model(image)
-                    torch.cuda.empty_cache()
-                    for i in range(len(preds)):
-                        pred = preds[i]
-                        masks = np.zeros_like(image[i].cpu())
-                        for j in range(len(pred['masks'])):
-                            m = pred['masks'][j]
-                            masks += (m.numpy() > 0.5) * 5 * (j + 1)
-                        masks =  np.einsum('kij->ijk',masks)/255.0
-                        plt.imsave(f"{imgList[i]}/original_model_segment.jpg", masks)
-                    i = 0
-                    imgList = []
+        items = os.listdir(img_path)
+        # Filter out any items that are not directories
+        directories = [item for item in items if os.path.isdir(os.path.join(img_path, item))]
+        imgList = []
+        i = 0
+        for j in tqdm(range(len(directories))):
+            dirname = directories[j]
+            if i != 4:
+                imgList.append(osp.join(img_path, dirname))
+                i += 1
+            else:
+                imgs = [Image.open(f"{i}/Image.jpg").convert("RGB") for i in imgList]
+                image = [model.transform(img, None)[0].to(model.device) for img in imgs]
+                preds = model(image)
+                torch.cuda.empty_cache()
+                for i in range(len(preds)):
+                    pred = preds[i]
+                    masks = np.zeros_like(image[i].cpu())
+                    for j in range(len(pred['masks'])):
+                        m = pred['masks'][j]
+                        masks += (m.numpy() > 0.5) * 5 * (j + 1)
+                    masks =  np.einsum('kij->ijk',masks)/255.0
+                    plt.imsave(f"{imgList[i]}/original_model_segment.jpg", masks)
+                i = 0
+                imgList = []
 
 
 def predict_and_visualize_one_img(img_to_predict):
@@ -114,11 +116,16 @@ def predict_and_visualize_all_imgs():
     model_path = "model_160.pth"
     device = torch.device('cuda')
     model = Maskrcnn(model_path, device, subclass=True)
-    for subdir, dirs, files in os.walk(data_dir):
-        for j in tqdm(range(len(dirs))):
-            dirname = dirs[j]
-            img_path = data_dir + dirname + "/Image.jpg"
-            model.run_on_one_img(img_path, out_dir=data_dir + dirname, save_file="model_output")
+
+    # Iterate through every directory in the level immediately below the data_dir
+    items = os.listdir(data_dir)
+    # Filter out any items that are not directories
+    directories = [item for item in items if os.path.isdir(os.path.join(data_dir, item))]
+    for j in tqdm(range(len(directories))):
+        dirname = directories[j]
+        img_path = data_dir + dirname + "/Image.jpg"
+        model.run_on_one_img(img_path, out_dir=data_dir + dirname, save_file="model_output")
+        torch.cuda.empty_cache()
 
 if __name__ == "__main__":
-    predict_on_all_imgs()
+    predict_and_visualize_all_imgs()

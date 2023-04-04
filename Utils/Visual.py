@@ -91,6 +91,8 @@ class ChemDemo(object):
         results = self.overlay_boxes(results, top_predictions)
         results = self.overlay_mask(results, top_predictions)
         # plt.imshow(cv.cvtColor(results, cv.COLOR_BGR2RGB))
+        # Clip data to the valid range for imshow with RGB data ([0..1] for floats)
+        results = np.clip(results, 0, 1)
         plt.imshow(results)
         if target:
             plt.savefig(outDir + "/" + target + '.png')
