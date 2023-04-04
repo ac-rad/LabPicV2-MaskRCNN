@@ -41,8 +41,13 @@ class LabPicV2Dataset(datasets.VisionDataset):
         self.train = train
         self.datapath = self.root + ("/Train" if train else "/Eval")
         print("Creating annotation list for reader this might take a while")
+        # Skip all samples that either don't have a vessel or a material
         for AnnDir in os.listdir(self.datapath):
-            self.annotations.append(self.datapath+"/"+AnnDir)
+            if os.path.isdir(self.datapath + "/" + AnnDir):
+                if len(os.listdir(self.datapath + "/" + AnnDir + "/Vessels")) > 0 and \
+                        len(os.listdir(self.datapath + "/" + AnnDir + "/MaterialsAndParts")) > 0:
+                    self.annotations.append(self.datapath+"/"+AnnDir)
+
         print(self.classes)
         print("Total=" + str(len(self.annotations)))
         print("done making file list")
@@ -51,6 +56,7 @@ class LabPicV2Dataset(datasets.VisionDataset):
         data_path = self.annotations[idx]
         data = json.load(open(data_path + '/Data.json', 'r'))
         img = Image.open(data_path + "/Image.jpg").convert("RGB")
+        img_path = data_path + "/Image.jpg"
         num_objs = 0
         labels = []
         sub_class = []
@@ -58,11 +64,18 @@ class LabPicV2Dataset(datasets.VisionDataset):
         boxes = []
 
         def _create_item(data_i, type):
-            try:
+            # try:
+            #     labels.append(self.classes[data_i[type][0]])
+            # except:
+            #     print(data_i)
+            #     print(type)
+            if data_i[type]:
                 labels.append(self.classes[data_i[type][0]])
-            except:
+            else:
+                print("Empty", type)
                 print(data_i)
-                print(type)
+                print()
+                return
             sub_label = np.zeros(len(self.subclass) + 1)
             for sub_cls in data_i[type]:
                 if sub_cls in self.subclass:
@@ -93,13 +106,15 @@ class LabPicV2Dataset(datasets.VisionDataset):
         if "Material" in self.source:
             num_objs += len(data["MaterialsAndParts"])
             for item in data["MaterialsAndParts"].keys():
-                if not (data["MaterialsAndParts"][item]["IsPart"] or data["MaterialsAndParts"][item]["IsOnSurface"] or data["MaterialsAndParts"][item]['IsScattered'] or data["MaterialsAndParts"][item]['IsFullSegmentableMaterialPhase']):
+                # if not (data["MaterialsAndParts"][item]["IsPart"] or data["MaterialsAndParts"][item]["IsOnSurface"] or data["MaterialsAndParts"][item]['IsScattered'] or data["MaterialsAndParts"][item]['IsFullSegmentableMaterialPhase']):
+                if not (data["MaterialsAndParts"][item]["IsPart"]):
                     _create_item(data["MaterialsAndParts"][item], "MaterialType_ClassNames")
 
-        labels = torch.as_tensor(labels, dtype=torch.int64)
-        sub_class = torch.as_tensor(sub_class, dtype=torch.uint8)
-        masks = torch.as_tensor(masks, dtype=torch.uint8)
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        # A gigantic speed-up from converting to np.array first, see https://github.com/pytorch/pytorch/issues/13918 [Alex]
+        labels = torch.as_tensor(np.array(labels), dtype=torch.int64)
+        sub_class = torch.as_tensor(np.array(sub_class), dtype=torch.uint8)
+        masks = torch.as_tensor(np.array(masks), dtype=torch.uint8)
+        boxes = torch.as_tensor(np.array(boxes), dtype=torch.float32)
         if len(list(boxes.size())) < 2:
             print("no box")
             print(data_path)
@@ -120,8 +135,8 @@ class LabPicV2Dataset(datasets.VisionDataset):
         else:
             area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
         iscrowd = torch.zeros((num_objs,), dtype=torch.int64)
-
         target = {
+            "img_path": img_path,
             "boxes": boxes,
             "labels": labels,
             "masks": masks,
@@ -356,5 +371,27 @@ class ChemScapeDataset(datasets.VisionDataset):
 
 
 if __name__=="__main__":
-    dataset = LabPicV2Dataset("../../../LabPicData/LabPics2.1/Chemistry", ["Vessel"], classes={"Vessel": 1, "Liquid":2, "Cork": 3, "Solid": 2, "Part":3, "Foam":2}, subclasses={"Syringe": 0, "Pippete":1, "Tube":2, "IVBag": 3, "DripChamber": 4,"IVBottle": 5,"Beaker": 6,"RoundFlask": 7,"Cylinder": 8,"SeparatoryFunnel": 9,"Funnel": 10,"Burete": 11,"ChromatographyColumn": 12,"Condenser": 13,"Bottle": 14,"Jar": 15,"Connector": 16,"Flask": 17,"Cup": 18,"Bowl": 19,"Erlenmeyer": 20,"Vial": 21,"Dish": 22, "HeatingVessel": 23,})
-    dataset.convert_semantic()
+    # classes = {"Vessel": 1, "Liquid": 2, "Cork": 0, "Solid": 2, "Part": 0, "Foam": 2, "Gel": 2, "Label": 0, "Vapor":2, "Other Material":2}
+    classes = {"Vessel": 1, "Syringe": 1, "Pippete": 1, "Tube": 1, "IVBag": 1, "DripChamber": 1, "IVBottle": 1,
+     "Beaker": 1, "RoundFlask": 1, "Cylinder": 1, "SeparatoryFunnel": 1, "Funnel": 1, "Burete": 1,
+     "ChromatographyColumn": 1, "Condenser": 1, "Bottle": 1, "Jar": 1, "Connector": 1, "Flask": 1,
+     "Cup": 1, "Bowl": 1, "Erlenmeyer": 1, "Vial": 1, "Dish": 1, "HeatingVessel": 1, "Transparent": 0,
+     "SemiTrans": 0, "Opaque": 0, "Cork": 0, "Label": 0, "Part": 0, "Spike": 0, "Valve": 0, "DisturbeView": 0,
+     "Liquid": 2, "Foam": 2, "Suspension": 2, "Solid": 2, "Filled": 2, "Powder": 2, "Urine": 2, "Blood": 2,
+     "MaterialOnSurface": 0, "MaterialScattered": 0, "PropertiesMaterialInsideImmersed": 0,
+     "PropertiesMaterialInFront": 0, "Gel": 2, "Granular": 2, "SolidLargChunk": 2, "Vapor": 2,
+     "Other Material": 2, "VesselInsideVessel": 0, "VesselLinked": 0, "PartInsideVessel": 0,
+     "SolidIncludingParts": 0, "MagneticStirer": 0, "Thermometer": 0, "Spatula": 0, "Holder": 0,
+     "Filter": 0, "PipeTubeStraw": 0}
+    subclasses = {"Syringe": 0, "Pippete": 1, "Tube": 2, "IVBag": 3, "DripChamber": 4, "IVBottle": 5, "Beaker": 6,
+                  "RoundFlask": 7, "Cylinder": 8, "SeparatoryFunnel": 9, "Funnel": 10, "Burete": 11,
+                  "ChromatographyColumn": 12, "Condenser": 13, "Bottle": 14, "Jar": 15, "Connector": 16, "Flask": 17,
+                  "Cup": 18, "Bowl": 19, "Erlenmeyer": 20, "Vial": 21, "Dish": 22, "HeatingVessel": 23, }
+
+    dataset_test = LabPicV2Dataset(os.path.join("../LabPicV2_Dataset", "Chemistry"), ['Vessel', 'Material'],
+                                        transforms=None, classes=classes,
+                                        subclasses=subclasses, train=False)
+
+    img, target = dataset_test[121]
+    print(img)
+    print(target)

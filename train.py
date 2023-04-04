@@ -60,18 +60,18 @@ def main(args):
     #                            transforms=utils.get_transform(train=not args.test_only), classes=classes)
     # dataset_test = ChemScapeDataset(os.path.join(args.data_path, "Test"), args.dataset,
     #                                 transforms=utils.get_transform(train=False), classes=dataset.classes)
-    # classes = {"Vessel": 1, "Syringe": 1, "Pippete": 1, "Tube": 1, "IVBag": 1, "DripChamber": 1, "IVBottle": 1,
-    #  "Beaker": 1, "RoundFlask": 1, "Cylinder": 1, "SeparatoryFunnel": 1, "Funnel": 1, "Burete": 1,
-    #  "ChromatographyColumn": 1, "Condenser": 1, "Bottle": 1, "Jar": 1, "Connector": 1, "Flask": 1,
-    #  "Cup": 1, "Bowl": 1, "Erlenmeyer": 1, "Vial": 1, "Dish": 1, "HeatingVessel": 1, "Transparent": 0,
-    #  "SemiTrans": 0, "Opaque": 0, "Cork": 0, "Label": 0, "Part": 0, "Spike": 0, "Valve": 0, "DisturbeView": 0,
-    #  "Liquid": 2, "Foam": 2, "Suspension": 2, "Solid": 2, "Filled": 2, "Powder": 2, "Urine": 2, "Blood": 2,
-    #  "MaterialOnSurface": 0, "MaterialScattered": 0, "PropertiesMaterialInsideImmersed": 0,
-    #  "PropertiesMaterialInFront": 0, "Gel": 2, "Granular": 2, "SolidLargChunk": 2, "Vapor": 2,
-    #  "Other Material": 2, "VesselInsideVessel": 0, "VesselLinked": 0, "PartInsideVessel": 0,
-    #  "SolidIncludingParts": 0, "MagneticStirer": 0, "Thermometer": 0, "Spatula": 0, "Holder": 0,
-    #  "Filter": 0, "PipeTubeStraw": 0}
-    classes = {"Vessel": 1, "Liquid": 2, "Cork": 0, "Solid": 2, "Part": 0, "Foam": 2, "Gel": 2, "Label": 0, "Vapor":2, "Other Material":2}
+    classes = {"Vessel": 1, "Syringe": 1, "Pippete": 1, "Tube": 1, "IVBag": 1, "DripChamber": 1, "IVBottle": 1,
+     "Beaker": 1, "RoundFlask": 1, "Cylinder": 1, "SeparatoryFunnel": 1, "Funnel": 1, "Burete": 1,
+     "ChromatographyColumn": 1, "Condenser": 1, "Bottle": 1, "Jar": 1, "Connector": 1, "Flask": 1,
+     "Cup": 1, "Bowl": 1, "Erlenmeyer": 1, "Vial": 1, "Dish": 1, "HeatingVessel": 1, "Transparent": 0,
+     "SemiTrans": 0, "Opaque": 0, "Cork": 0, "Label": 0, "Part": 0, "Spike": 0, "Valve": 0, "DisturbeView": 0,
+     "Liquid": 2, "Foam": 2, "Suspension": 2, "Solid": 2, "Filled": 2, "Powder": 2, "Urine": 2, "Blood": 2,
+     "MaterialOnSurface": 0, "MaterialScattered": 0, "PropertiesMaterialInsideImmersed": 0,
+     "PropertiesMaterialInFront": 0, "Gel": 2, "Granular": 2, "SolidLargChunk": 2, "Vapor": 2,
+     "Other Material": 2, "VesselInsideVessel": 0, "VesselLinked": 0, "PartInsideVessel": 0,
+     "SolidIncludingParts": 0, "MagneticStirer": 0, "Thermometer": 0, "Spatula": 0, "Holder": 0,
+     "Filter": 0, "PipeTubeStraw": 0}
+    # classes = {"Vessel": 1, "Liquid": 2, "Cork": 0, "Solid": 2, "Part": 0, "Foam": 2, "Gel": 2, "Label": 0, "Vapor":2, "Other Material":2}
     coco_class = {1:1, 2:0, 3:0, 4:0, 5:0, 6:2, 7:2, 8:2, 9:2, 10:2, 11:2, 12:2, 13:2, 14:2, 15:2, 16:2}
     subclasses = {"Syringe": 0, "Pippete": 1, "Tube": 2, "IVBag": 3, "DripChamber": 4, "IVBottle": 5, "Beaker": 6,
                   "RoundFlask": 7, "Cylinder": 8, "SeparatoryFunnel": 9, "Funnel": 10, "Burete": 11,
@@ -81,11 +81,11 @@ def main(args):
     med_dataset = LabPicV2Dataset(os.path.join(args.data_path, "Medical"), args.dataset,
                               transforms=utils.get_transform(train=False), classes=classes,
                               subclasses=subclasses)
-    dataset_test = LabPicV2Dataset(os.path.join(args.data_path, "Medical"), args.dataset,
-                                  transforms=utils.get_transform(train=not args.test_only), classes=classes,
-                                  subclasses=subclasses, train=False)
-    coco_dataset = ChemScapeDataset(os.path.join(args.data_path, "COCO/SemanticMaps"), ['Vessel'],
-                                    transforms=utils.get_transform(train=not args.test_only), classes=coco_class, subclasses=subclasses, coco=True)
+    dataset_test = LabPicV2Dataset(os.path.join(args.data_path, "Chemistry"), args.dataset,
+                                        transforms=utils.get_transform(train=not args.test_only), classes=classes,
+                                        subclasses=subclasses, train=False)
+    # coco_dataset = ChemScapeDataset(os.path.join(args.data_path, "COCO/SemanticMaps"), ['Vessel'],
+    #                                 transforms=utils.get_transform(train=not args.test_only), classes=coco_class, subclasses=subclasses, coco=True)
     #coco_dataset = dataset_test
     # dataset = MedDataset(args.data_path, transforms=utils.get_transform(train=False))
     # dataset_test = dataset
@@ -95,38 +95,38 @@ def main(args):
     print("Creating data loaders")
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(dataset)
-        coco_sampler = torch.utils.data.distributed.DistributedSampler(coco_dataset)
+        # coco_sampler = torch.utils.data.distributed.DistributedSampler(coco_dataset)
         test_sampler = torch.utils.data.distributed.DistributedSampler(dataset_test)
         med_sampler = torch.utils.data.distributed.DistributedSampler(med_dataset)
     else:
         train_sampler = torch.utils.data.RandomSampler(dataset)
-        coco_sampler = torch.utils.data.RandomSampler(coco_dataset)
+        # coco_sampler = torch.utils.data.RandomSampler(coco_dataset)
         test_sampler = torch.utils.data.SequentialSampler(dataset_test)
         med_sampler = torch.utils.data.RandomSampler(med_dataset)
 
     if args.aspect_ratio_group_factor >= 0:
         group_ids = create_aspect_ratio_groups(dataset, k=args.aspect_ratio_group_factor)
         train_batch_sampler = GroupedBatchSampler(train_sampler, group_ids, args.batch_size)
-        coco_batch_sampler = GroupedBatchSampler(coco_sampler, group_ids, args.batch_size)
+        # coco_batch_sampler = GroupedBatchSampler(coco_sampler, group_ids, args.batch_size)
         med_batch_sampler = GroupedBatchSampler(med_sampler, group_ids, args.batch_size)
     else:
         train_batch_sampler = torch.utils.data.BatchSampler(
             train_sampler, args.batch_size, drop_last=True)
-        coco_batch_sampler = torch.utils.data.BatchSampler(
-            coco_sampler, args.batch_size, drop_last=True)
+        # coco_batch_sampler = torch.utils.data.BatchSampler(
+        #     coco_sampler, args.batch_size, drop_last=True)
         med_batch_sampler = torch.utils.data.BatchSampler(
             med_sampler, args.batch_size, drop_last=True)
     data_loader = torch.utils.data.DataLoader(
         dataset, batch_sampler=train_batch_sampler, num_workers=args.workers,
         collate_fn=utils.collate_fn)
-    coco_data_loader = torch.utils.data.DataLoader(
-        coco_dataset, batch_sampler=coco_batch_sampler, num_workers=args.workers,
-        collate_fn=utils.collate_fn)
+    # coco_data_loader = torch.utils.data.DataLoader(
+    #     coco_dataset, batch_sampler=coco_batch_sampler, num_workers=args.workers,
+    #     collate_fn=utils.collate_fn)
     med_data_loader = torch.utils.data.DataLoader(
         med_dataset, batch_sampler=med_batch_sampler, num_workers=args.workers,
         collate_fn=utils.collate_fn)
     data_loader_test = torch.utils.data.DataLoader(
-        dataset_test, batch_size=1,
+        dataset_test, batch_size=args.batch_size,
         sampler=test_sampler, num_workers=args.workers,
         collate_fn=utils.collate_fn)
     print("Creating model")
@@ -158,11 +158,12 @@ def main(args):
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
 
     if args.test_only:
-        train_eval_sampler = torch.utils.data.SequentialSampler(dataset)
-        data_loader_train = torch.utils.data.DataLoader(
-            dataset, batch_size=1,
-            sampler=train_eval_sampler, num_workers=args.workers,
-            collate_fn=utils.collate_fn)
+        print("Start testing")
+        # train_eval_sampler = torch.utils.data.SequentialSampler(dataset)
+        # data_loader_train = torch.utils.data.DataLoader(
+        #     dataset, batch_size=args.batch_size,
+        #     sampler=train_eval_sampler, num_workers=args.workers,
+        #     collate_fn=utils.collate_fn)
         with torch.no_grad():
             # for t in np.arange(0.55, 0.75, 0.05):
             #     demo = ChemDemo(model, device=device, confidence_threshold=t)
@@ -187,51 +188,50 @@ def main(args):
             #     with open(args.output_dir + "/trainAnno{}/".format(t) + 'train.json', 'w') as f:
             #         json.dump(train_json, f)
             evaluate(model, data_loader_test, device=device)
-            evaluate(model,data_loader_train, device=device)
             return
-
-    print("Start training")
-    start_time = time.time()
-    for epoch in range(args.epochs):
-        if args.distributed:
-            train_sampler.set_epoch(epoch)
-        if args.equal_batch:
-            if epoch % 3 == 0:
-                train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
-            elif epoch % 3 == 1:
-                for i in range(len(dataset)// len(med_dataset)+1):
-                    train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
+    else:
+        print("Start training")
+        start_time = time.time()
+        for epoch in range(args.epochs):
+            if args.distributed:
+                train_sampler.set_epoch(epoch)
+            if args.equal_batch:
+                if epoch % 2 == 0:
+                    train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
+                else:
+                    for i in range(len(dataset)// len(med_dataset)+1):
+                        train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
+                # else:
+                    # train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, batch_limit=(len(dataset) // args.batch_size), is_coco=True)
+                if args.resume:
+                    utils.save_on_master({
+                        'model': model_without_ddp.state_dict(),
+                        'optimizer': optimizer.state_dict(),
+                        'lr_scheduler': lr_scheduler.state_dict(),
+                        'args': args},
+                        os.path.join(os.path.dirname(args.resume), "temp.pth"))
+                    os.replace(os.path.join(os.path.dirname(args.resume), "temp.pth"), args.resume)
             else:
-                train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, batch_limit=(len(dataset) // args.batch_size), is_coco=True)
-            if args.resume:
+                train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
+                # train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
+                # train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, is_coco=True)
+
+            lr_scheduler.step()
+
+            if args.output_dir and epoch % 10 == 0:
                 utils.save_on_master({
                     'model': model_without_ddp.state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'lr_scheduler': lr_scheduler.state_dict(),
                     'args': args},
-                    os.path.join(os.path.dirname(args.resume), "temp.pth"))
-                os.replace(os.path.join(os.path.dirname(args.resume), "temp.pth"), args.resume)
-        else:
-            train_one_epoch(model, optimizer, data_loader, device, epoch, args.print_freq)
-            train_one_epoch(model, optimizer, med_data_loader, device, epoch, args.print_freq)
-            train_one_epoch(model, optimizer, coco_data_loader, device, epoch, args.print_freq, is_coco=True)
-
-        lr_scheduler.step()
-
-        if args.output_dir and epoch % 10 == 0:
-            utils.save_on_master({
-                'model': model_without_ddp.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'lr_scheduler': lr_scheduler.state_dict(),
-                'args': args},
-                os.path.join(args.output_dir, 'model_{}.pth'.format(epoch)))
-        # evaluate after every epoch
-        evaluate(model, data_loader_test, device=device)
+                    os.path.join(args.output_dir, 'model_{}.pth'.format(epoch)))
+            # evaluate after every epoch
+            # evaluate(model, data_loader_test, device=device)
 
 
-    total_time = time.time() - start_time
-    total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    print('Training time {}'.format(total_time_str))
+        total_time = time.time() - start_time
+        total_time_str = str(datetime.timedelta(seconds=int(total_time)))
+        print('Training time {}'.format(total_time_str))
 
 
 if __name__ == "__main__":
@@ -239,17 +239,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__)
 
-    parser.add_argument('--data-path', default='../LabPicData/LabPics2.1', help='dataset')
+    parser.add_argument('--data-path', default='../LabPicV2_Dataset', help='dataset')
     parser.add_argument('--dataset',nargs='*', default=['Vessel'], help='dataset')
     parser.add_argument('--model', default='maskrcnn_resnet50_fpn', help='model')
     parser.add_argument('--device', default='cuda', help='device')
-    parser.add_argument('-b', '--batch-size', default=2, type=int,
+    parser.add_argument('-b', '--batch-size', default=4, type=int,
                         help='images per gpu, the total batch size is $NGPU x batch_size')
-    parser.add_argument('--epochs', default=13, type=int, metavar='N',
+    parser.add_argument('--epochs', default=30, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
                         help='number of data loading workers (default: 4)')
-    parser.add_argument('--lr', default=0.02/8, type=float,
+    parser.add_argument('--lr', default=0.02, type=float,
                         help='initial learning rate, 0.02 is the default value for training '
                         'on 8 gpus and 2 images_per_gpu')
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
